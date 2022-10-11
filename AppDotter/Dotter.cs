@@ -3,6 +3,7 @@ using OpenTelemetry;
 using System.Collections.Concurrent;
 using System.Reflection;
 using AppDotter.Exporter;
+using System.Runtime.CompilerServices;
 
 namespace AppDotter
 {
@@ -25,11 +26,13 @@ namespace AppDotter
 
         public static void Dot(
              TimeSpan duration,
-             string calledServiceName,
-             string calledMethodName = "",
-             bool success = true)
+             bool success = true,
+             [CallerFilePath] string calledServiceName = "",
+             [CallerMemberNameAttribute] string calledMethodName = "",
+             [CallerLineNumber] int sourceLineNumber = 0)
         {
-
+            calledServiceName = Path.GetFileNameWithoutExtension(calledServiceName);
+            calledMethodName = calledMethodName + "-" + sourceLineNumber;
             Exporter.Dot(duration, calledServiceName, calledMethodName, success);
         }
 

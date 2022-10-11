@@ -19,13 +19,15 @@ Log.Logger.Information("start");
 void ConsoleExporter()
 {
     
-    Dotter.Exporter = new ConsoleExporter(); // FileExporter --> ./metrics.log
+    Dotter.Exporter = new ConsoleExporter(10); // FileExporter --> ./metrics.log
 
     int index = 1;
     while (!Console.KeyAvailable)
     {
+        Console.Write($"\r{index}");
+        var success = index % 2 == 0;
+        Dotter.Dot(TimeSpan.FromMilliseconds(index++), success, "Great", "SayHi");
         Thread.Sleep(1000);
-        Dotter.Dot(TimeSpan.FromMilliseconds(index++), "Grpc", "Greet", index % 2 == 0);
     }
 }
 
@@ -38,8 +40,9 @@ void PrometheusExporter()
     int index = 1;
     while (!Console.KeyAvailable)
     {
+        var success = index % 2 == 0;
+        Dotter.Dot(TimeSpan.FromMilliseconds(index++), success);
         Thread.Sleep(1000);
-        Dotter.Dot(TimeSpan.FromMilliseconds(index++), "Grpc", "Greet", index % 2 == 0);
     }
 }
 
