@@ -6,6 +6,7 @@
            TimeSpan duration,
            string callServiceName, 
            string callMethodName,
-           bool success);
+           bool success,
+           Dictionary<string, string>? labels);
     }
 }

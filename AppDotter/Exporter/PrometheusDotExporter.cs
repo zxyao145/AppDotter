@@ -42,7 +42,9 @@ namespace AppDotter.Exporter
              TimeSpan duration,
              string calledServiceName,
              string calledMethodName = "",
-             bool success = true)
+             bool success = true,
+             Dictionary<string, string>? labels = null
+            )
         {
             string key = DotterInfo.GetMethodMeterName(calledServiceName, calledMethodName);
 

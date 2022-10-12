@@ -5,10 +5,11 @@ namespace AppDotter.Exporter
     public class CounterInfo
     {
         public string Name { get; private set; }
-        public CounterInfo(string name)
+        public Dictionary<string, string> Labels { get; private set; }
+        public CounterInfo(string name, Dictionary<string, string> labels)
         {
             Name = name;
-
+            Labels = labels;
         }
 
         private long _total = 0;
@@ -163,26 +164,27 @@ namespace AppDotter.Exporter
             // 第二行表示这个 metrics 对应的类型
             // 第三行后面的表示 metrics 的数据  metrics_name{tags} value
 
+            string labels = GetLabels();
 
             List<string> result = new List<string>(32);
             long ms = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             lock (this)
             {
                 var sla = this.CalcAvailability();
-                result.Add($"availability_{seconds}sec{{Name=\"{Name}\"}} {sla:0.0000}");
+                result.Add($"availability_{seconds}sec{{{labels}}} {sla:0.0000}");
                 var total = this.Total;
                 var failed = this.Failed;
-                result.Add($"total_{seconds}sec_count{{Name=\"{Name}\"}} {total}");
-                result.Add($"success_{seconds}sec_count{{Name=\"{Name}\"}} {total - failed}");
-                result.Add($"failed_{seconds}sec_count{{Name=\"{Name}\"}} {failed}");
+                result.Add($"total_{seconds}sec_count{{{labels}}} {total}");
+                result.Add($"success_{seconds}sec_count{{{labels}}} {total - failed}");
+                result.Add($"failed_{seconds}sec_count{{{labels}}} {failed}");
 
                 var totalCps = total / ((double)seconds);
                 var successCps = (total - failed) / ((double)seconds);
                 var failedCps = failed / ((double)seconds);
 
-                result.Add($"cps_total_{seconds}sec{{Name=\"{Name}\"}} {totalCps:0.00}");
-                result.Add($"cps_success_{seconds}sec{{Name=\"{Name}\"}} {successCps:0.00}");
-                result.Add($"cps_failed _{seconds}sec{{Name=\"{Name}\"}} {failedCps:0.00}");
+                result.Add($"cps_total_{seconds}sec{{{labels}}} {totalCps:0.00}");
+                result.Add($"cps_success_{seconds}sec{{{labels}}} {successCps:0.00}");
+                result.Add($"cps_failed _{seconds}sec{{{labels}}} {failedCps:0.00}");
 
                 var pxxTotal = this.PxxTotal();
                 var pxxFailed = this.PxxFailed();
@@ -198,14 +200,32 @@ namespace AppDotter.Exporter
 
         private List<string> GetPxx(long ms, string type, (double P99, double P95, double P90, double P75, double P50) pxx)
         {
+            string labels = GetLabels();
+
             return new List<string>
             {
-                $"p99_{type}{{Name=\"{Name}\"}} {pxx.P99 :0.00}",
-                $"p95_{type}{{Name=\"{Name}\"}} {pxx.P95 :0.00}",
-                $"p90_{type}{{Name=\"{Name}\"}} {pxx.P90 :0.00}",
-                $"p75_{type}{{Name=\"{Name}\"}} {pxx.P75 :0.00}",
-                $"p50_{type}{{Name=\"{Name}\"}} {pxx.P50 :0.00}",
+                $"p99_{type}{{{labels}}} {pxx.P99 :0.00}",
+                $"p95_{type}{{{labels}}} {pxx.P95 :0.00}",
+                $"p90_{type}{{{labels}}} {pxx.P90 :0.00}",
+                $"p75_{type}{{{labels}}} {pxx.P75 :0.00}",
+                $"p50_{type}{{{labels}}} {pxx.P50 :0.00}",
             };
+        }
+
+
+        private string? _labels = null;
+        private string GetLabels()
+        {
+            if (_labels == null)
+            {
+                _labels = $"name=\"{Name}\"";
+                if (Labels.Count > 0)
+                {
+                    _labels = _labels + "," + string.Join(",", Labels.Select(x => $"{x.Key}=\"{x.Value}\""));
+                }
+
+            }
+            return _labels;
         }
     }
 

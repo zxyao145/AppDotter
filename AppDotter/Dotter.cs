@@ -29,11 +29,12 @@ namespace AppDotter
              bool success = true,
              [CallerFilePath] string calledServiceName = "",
              [CallerMemberNameAttribute] string calledMethodName = "",
-             [CallerLineNumber] int sourceLineNumber = 0)
+             [CallerLineNumber] int sourceLineNumber = 0,
+             Dictionary<string, string>? labels = null)
         {
             calledServiceName = Path.GetFileNameWithoutExtension(calledServiceName);
             calledMethodName = calledMethodName + "-" + sourceLineNumber;
-            Exporter.Dot(duration, calledServiceName, calledMethodName, success);
+            Exporter.Dot(duration, calledServiceName, calledMethodName, success, labels);
         }
 
 

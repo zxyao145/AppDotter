@@ -23,18 +23,11 @@ namespace AppDotter.Exporter
         private ConcurrentDictionary<string, CounterInfo> ServiceCounter
             = new ConcurrentDictionary<string, CounterInfo>();
 
-
-        /// <summary>
-        /// 被依赖方法的打点数据
-        /// </summary>
-        private ConcurrentDictionary<string, CounterInfo> MethodAvalability
-            = new ConcurrentDictionary<string, CounterInfo>();
-
-        public ConsoleExporter(int seconds = 60)
+        public ConsoleExporter(int intervalSeconds = 60)
         {
-            this.intervalSedonds = seconds; 
+            this.intervalSedonds = intervalSeconds; 
             _timer = new Timer(TimerCallback);
-            _timer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(seconds));
+            _timer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(intervalSeconds));
         }
 
         private void TimerCallback(object? state)
@@ -73,11 +66,11 @@ namespace AppDotter.Exporter
             TimeSpan duration,
             string callServiceName,
             string callMethodName,
-            bool success)
+            bool success, Dictionary<string, string>? labels)
         {
             if (!ServiceCounter.ContainsKey(callServiceName))
             {
-                ServiceCounter[callServiceName] = new CounterInfo(callServiceName);
+                ServiceCounter[callServiceName] = new CounterInfo(callServiceName, labels ?? new Dictionary<string, string>());
             }
             ServiceCounter[callServiceName].Count(success, duration);
 
@@ -86,7 +79,7 @@ namespace AppDotter.Exporter
 
             if (!ServiceCounter.ContainsKey(methodName))
             {
-                ServiceCounter[methodName] = new CounterInfo(methodName);
+                ServiceCounter[methodName] = new CounterInfo(methodName, labels ?? new Dictionary<string, string>());
             }
             ServiceCounter[methodName].Count(success, duration);
         }
@@ -105,7 +98,7 @@ namespace AppDotter.Exporter
     public class FileExporter : ConsoleExporter
     {
         private readonly StreamWriter streamWriter;
-        public FileExporter()
+        public FileExporter(int intervalSeconds = 60) :base(intervalSeconds)
         {
             streamWriter = new StreamWriter("./metrics.log");
         }
@@ -117,6 +110,7 @@ namespace AppDotter.Exporter
                 return;
             }
             List<Task> tasks = new List<Task>();
+
             foreach (var item in metrics)
             {
                 tasks.Add(

@@ -18,8 +18,8 @@ Log.Logger.Information("start");
 
 void ConsoleExporter()
 {
-    
-    Dotter.Exporter = new ConsoleExporter(10); // FileExporter --> ./metrics.log
+
+    Dotter.Exporter = new ConsoleExporter(10);//new ConsoleExporter(); // FileExporter --> ./metrics.log
 
     int index = 1;
     while (!Console.KeyAvailable)
